@@ -1,9 +1,6 @@
 import { HttpHeaders } from '@angular/common/http';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { AzureFaceService } from 'src/services/azure-face-service.service';
-/*const msRest = require("@azure/ms-rest-js");
-const Face = require("@azure/cognitiveservices-face");
-const uuid = require("uuid/v4");*/
 
 @Component({
   selector: 'app-root',
@@ -13,69 +10,123 @@ const uuid = require("uuid/v4");*/
 export class AppComponent {
   title = 'azure-web-app';
 
-  @ViewChild('inputImagen')
-  inputImagen: ElementRef;
-  file: any;
-  imageSrc: any;
+  @ViewChild('inputImagenGrupal')
+  inputImagenGrupal: ElementRef;
+
+  @ViewChild('inputImagenIndividual')
+  inputImagenIndividual: ElementRef;
+
+  @ViewChild('canvas', { static: true }) 
+  canvas: ElementRef<HTMLCanvasElement>;
+
+  fileGrupal: any;
+  fileIndividual: any;
+  imageSrcGrupal: any;
+  imageSrcIndividual: any;
+  nombreArchivoGrupal: any = "Seleccione una imagen...";
+  nombreArchivoIndividual: any = "Seleccione una imagen...";
+  archivoCargadoGrupal: any;
+  archivoCargadoIndividual: any;
+  botonCargando = false;
+  caraEncontrada = false;
+
+  ctx: CanvasRenderingContext2D;
+
   jsonRespuesta: any;
   jsonTextarea: any;
-  nombreArchivo: any = "Seleccione una imagen...";
-  archivoCargado: any;
-  headers = new HttpHeaders({'Content-Type': "application/octet-stream", "Ocp-Apim-Subscription-Key": "f12665f204e340a2a03eb6dba1db4a93"});
+  jsonCoincidencia: any;
+
+  faceIdRostro: any;
 
   /* CONEXIÓN */
-  //key = "f12665f204e340a2a03eb6dba1db4a93";
-  //endpoint = "https://face-web-app-mgtic.cognitiveservices.azure.com/";
-  //urlimage = "https://eltrampolin.es/wp-content/uploads/2018/04/comunicacio%CC%81n-asertiva-grupal-630x321.jpg"; 
+  apiKey = "f12665f204e340a2a03eb6dba1db4a93";
+  hDetect = new HttpHeaders({'Content-Type': "application/octet-stream", "Ocp-Apim-Subscription-Key": this.apiKey});
+  hVerify = new HttpHeaders({'Content-Type': "application/json", "Ocp-Apim-Subscription-Key": this.apiKey});
 
   constructor(private azureFaceService: AzureFaceService) {
-
   }
 
-  cargarArchivo(fileInput) {
+  ngOnInit(): void {
+    //this.ctx = this.canvas.nativeElement.getContext('2d');
+  }
+
+  cargarArchivoGrupal(fileInput) {
     if (fileInput.target.files && fileInput.target.files[0]) {
     const reader = new FileReader();
     reader.onload = ((e) => {
       this.jsonRespuesta = undefined;
-      this.imageSrc = e.target['result'];
-      this.nombreArchivo = fileInput.target.files[0].name;
-      this.archivoCargado = true;
-      this.file = fileInput.target.files[0];
+      this.jsonTextarea = undefined;
+      this.jsonCoincidencia = undefined;
+      this.imageSrcGrupal = e.target['result'];
+      this.nombreArchivoGrupal = fileInput.target.files[0].name;
+      this.archivoCargadoGrupal = true;
+      this.fileGrupal = fileInput.target.files[0];
+    });
+    reader.readAsDataURL(fileInput.target.files[0]);
+    }
+  }
+
+  cargarArchivoIndividual(fileInput) {
+    if (fileInput.target.files && fileInput.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = ((e) => {
+      this.jsonRespuesta = undefined;
+      this.jsonTextarea = undefined;
+      this.jsonCoincidencia = undefined;
+      this.imageSrcIndividual = e.target['result'];
+      this.nombreArchivoIndividual = fileInput.target.files[0].name;
+      this.archivoCargadoIndividual = true;
+      this.fileIndividual = fileInput.target.files[0];
     });
     reader.readAsDataURL(fileInput.target.files[0]);
     }
   }
 
   async procesarImagen() {
-    //const credentials = new msRest.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': this.key } });
-    //const client = new Face.FaceClient(credentials, this.endpoint);
-    
-    //const image_base_url = "https://csdx.blob.core.windows.net/resources/Face/Images/";
-    //const person_group_id = uuid();
-
-    /*let detected_faces = await client.face.detectWithUrl(this.urlimage,
-      {
-        detectionModel: "detection_02",
-        recognitionModel: "recognition_03"
-      });*/
-      
-      //let imageSrc = this.imageSrc.split(',')[1];
-      /*console.log(this.imageSrc);
-      let body = { data : this.imageSrc };*/
-      let headers = { headers: this.headers };
-      this.azureFaceService.detectarRostros(this.file, headers).subscribe(response => {
-        this.jsonRespuesta = response;
-        this.jsonTextarea = JSON.stringify(this.jsonRespuesta, undefined, 2);
+    if (this.archivoCargadoGrupal && this.archivoCargadoIndividual) {
+      this.botonCargando = true;
+      let headersDetect = { headers: this.hDetect };
+      this.azureFaceService.detectarRostros(this.fileGrupal, headersDetect).subscribe(responseDetect => {
+        this.jsonRespuesta = responseDetect;
+        this.azureFaceService.detectarRostros(this.fileIndividual, headersDetect).subscribe(responseVerify => {
+          responseVerify.forEach(element => {
+            this.faceIdRostro = element.faceId;
+          });
+          this.jsonRespuesta.forEach(element => {
+            let faceIds = {
+              "faceId1": element.faceId,
+              "faceId2": this.faceIdRostro,
+              };
+            let headersVerify = { headers: this.hVerify };
+            this.azureFaceService.verificarRostros(faceIds, headersVerify).subscribe(responseResult => {
+              if (responseResult.isIdentical) {
+                this.jsonCoincidencia = responseResult;
+                this.jsonTextarea = JSON.stringify(responseVerify, undefined, 2);
+                this.caraEncontrada = true;
+              }
+              this.botonCargando = false;
+            });
+          });
+        }, (error) => {
+          console.log(error);
+        });
       }, (error) => {
         console.log(error);
       });
+    }
   }
 
   resetearImagen() {
-    this.inputImagen.nativeElement.value = "";
-    this.imageSrc = undefined;
-    this.nombreArchivo = "Seleccione una imagen...";
-    this.archivoCargado = false;
+    this.inputImagenGrupal.nativeElement.value = "";
+    this.inputImagenIndividual.nativeElement.value = "";
+    this.imageSrcGrupal = undefined;
+    this.imageSrcIndividual = undefined;
+    this.nombreArchivoGrupal = "Seleccione una imagen...";
+    this.nombreArchivoIndividual = "Seleccione una imagen...";
+    this.archivoCargadoGrupal = false;
+    this.archivoCargadoIndividual = false;
     this.jsonRespuesta = undefined;
+    this.jsonTextarea = undefined;
+    this.jsonCoincidencia = undefined;
   }
 }

@@ -1,3 +1,13 @@
-.botonEliminar {
+.boton {
     padding-bottom: 0.2rem !important;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    height: 80px;
+}
+
+canvas { 
+    border-style: solid
 }
