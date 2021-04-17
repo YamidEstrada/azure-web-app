@@ -1,24 +1,19 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { AzureFaceService } from 'src/services/azure-face-service.service';
+import { ModalDirective } from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
   title = 'azure-web-app';
-
-  @ViewChild('inputImagenGrupal')
-  inputImagenGrupal: ElementRef;
-
-  @ViewChild('inputImagenIndividual')
-  inputImagenIndividual: ElementRef;
-
-  @ViewChild('canvas', { static: true }) 
-  canvas: ElementRef<HTMLCanvasElement>;
-
+  @ViewChild('inputImagenGrupal') inputImagenGrupal: ElementRef;
+  @ViewChild('inputImagenIndividual') inputImagenIndividual: ElementRef;
+  @ViewChild('canvas', { static: true }) canvas: ElementRef<HTMLCanvasElement>;
+  @ViewChild('modalVerImagen', { 'static': false }) modalVerImagen: ModalDirective;
   fileGrupal: any;
   fileIndividual: any;
   imageSrcGrupal: any;
@@ -29,14 +24,14 @@ export class AppComponent {
   archivoCargadoIndividual: any;
   botonCargando = false;
   caraEncontrada = false;
-
   ctx: CanvasRenderingContext2D;
-
   jsonRespuesta: any;
   jsonTextarea: any;
   jsonCoincidencia: any;
-
+  elementoEncontrado: any;
   faceIdRostro: any;
+  img = new Image();
+  porcentaje: any;
 
   /* CONEXIÓN */
   apiKey = "f12665f204e340a2a03eb6dba1db4a93";
@@ -46,8 +41,8 @@ export class AppComponent {
   constructor(private azureFaceService: AzureFaceService) {
   }
 
-  ngOnInit(): void {
-    //this.ctx = this.canvas.nativeElement.getContext('2d');
+  ngAfterViewInit(): void {
+    this.ctx = (this.canvas.nativeElement as HTMLCanvasElement).getContext('2d');
   }
 
   cargarArchivoGrupal(fileInput) {
@@ -83,6 +78,7 @@ export class AppComponent {
   }
 
   async procesarImagen() {
+    this.caraEncontrada = false;
     if (this.archivoCargadoGrupal && this.archivoCargadoIndividual) {
       this.botonCargando = true;
       let headersDetect = { headers: this.hDetect };
@@ -92,17 +88,23 @@ export class AppComponent {
           responseVerify.forEach(element => {
             this.faceIdRostro = element.faceId;
           });
-          this.jsonRespuesta.forEach(element => {
+          this.jsonRespuesta.forEach(elementDetect => {
             let faceIds = {
-              "faceId1": element.faceId,
+              "faceId1": elementDetect.faceId,
               "faceId2": this.faceIdRostro,
               };
             let headersVerify = { headers: this.hVerify };
             this.azureFaceService.verificarRostros(faceIds, headersVerify).subscribe(responseResult => {
               if (responseResult.isIdentical) {
-                this.jsonCoincidencia = responseResult;
-                this.jsonTextarea = JSON.stringify(responseVerify, undefined, 2);
+                this.elementoEncontrado = elementDetect;
+                this.jsonTextarea = JSON.stringify(elementDetect, undefined, 2);
+                this.jsonCoincidencia = JSON.stringify(responseResult, undefined, 2);
+                this.porcentaje = responseResult.confidence;
                 this.caraEncontrada = true;
+                this.img.src = this.imageSrcGrupal;
+			        	this.ctx.drawImage(this.img, 0, 0, this.img.width, this.img.height);
+                this.ctx.strokeStyle = 'blue';
+                this.ctx.strokeRect(this.elementoEncontrado['faceRectangle'].left, this.elementoEncontrado['faceRectangle'].top, this.elementoEncontrado['faceRectangle'].width, this.elementoEncontrado['faceRectangle'].height);
               }
               this.botonCargando = false;
             });
@@ -128,5 +130,10 @@ export class AppComponent {
     this.jsonRespuesta = undefined;
     this.jsonTextarea = undefined;
     this.jsonCoincidencia = undefined;
+    this.caraEncontrada = false;
+  }
+
+  mostrarImagen(){
+    this.modalVerImagen.show();
   }
 }
