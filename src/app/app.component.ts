@@ -34,7 +34,7 @@ export class AppComponent implements AfterViewInit {
   porcentaje: any;
 
   /* CONEXIÓN */
-  apiKey = "626a4bd9ba6049249fcaf342af2b13f9";
+  apiKey = "7c73bbf61c0442c29c83e7e0e893edce";
   hDetect = new HttpHeaders({'Content-Type': "application/octet-stream", "Ocp-Apim-Subscription-Key": this.apiKey});
   hVerify = new HttpHeaders({'Content-Type': "application/json", "Ocp-Apim-Subscription-Key": this.apiKey});
 
