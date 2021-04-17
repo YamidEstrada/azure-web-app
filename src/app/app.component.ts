@@ -23,7 +23,7 @@ export class AppComponent implements AfterViewInit {
   archivoCargadoGrupal: any;
   archivoCargadoIndividual: any;
   botonCargando = false;
-  caraEncontrada = false;
+  caraEncontrada: any;
   ctx: CanvasRenderingContext2D;
   jsonRespuesta: any;
   jsonTextarea: any;
@@ -34,7 +34,7 @@ export class AppComponent implements AfterViewInit {
   porcentaje: any;
 
   /* CONEXIÓN */
-  apiKey = "f12665f204e340a2a03eb6dba1db4a93";
+  apiKey = "7c73bbf61c0442c29c83e7e0e893edce";
   hDetect = new HttpHeaders({'Content-Type': "application/octet-stream", "Ocp-Apim-Subscription-Key": this.apiKey});
   hVerify = new HttpHeaders({'Content-Type': "application/json", "Ocp-Apim-Subscription-Key": this.apiKey});
 
@@ -78,7 +78,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   async procesarImagen() {
-    this.caraEncontrada = false;
+    this.jsonRespuesta = undefined;
     if (this.archivoCargadoGrupal && this.archivoCargadoIndividual) {
       this.botonCargando = true;
       let headersDetect = { headers: this.hDetect };
@@ -87,7 +87,7 @@ export class AppComponent implements AfterViewInit {
         this.azureFaceService.detectarRostros(this.fileIndividual, headersDetect).subscribe(responseVerify => {
           responseVerify.forEach(element => {
             this.faceIdRostro = element.faceId;
-          });
+          }); 
           this.jsonRespuesta.forEach(elementDetect => {
             let faceIds = {
               "faceId1": elementDetect.faceId,
@@ -130,7 +130,7 @@ export class AppComponent implements AfterViewInit {
     this.jsonRespuesta = undefined;
     this.jsonTextarea = undefined;
     this.jsonCoincidencia = undefined;
-    this.caraEncontrada = false;
+    this.caraEncontrada = undefined;
   }
 
   mostrarImagen(){

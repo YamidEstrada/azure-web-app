@@ -330,6 +330,9 @@
       <button *ngIf="caraEncontrada" type="button" class="btn btn-warning boton" style="margin-left: 2px;" (click)="mostrarImagen()">
         <span class="fa fa-image fa-lg" aria-hidden="true"></span>
       </button>
+      <button *ngIf="botonCargando" type="button" class="btn btn-info boton" style="margin-left: 2px;" (click)="botonCargando = false">
+        <span class="fa fa-stop fa-lg" aria-hidden="true"></span>
+      </button>
     </div>
   </div>
   <div class="container-fluid" style="padding-bottom: 80px;">
@@ -372,7 +375,7 @@
         <div *ngIf="jsonRespuesta && jsonRespuesta.length == 0">
           No se obtuvo respuesta de Azure Face.
         </div>
-        <div *ngIf="jsonRespuesta && jsonRespuesta.length > 0 && !caraEncontrada">
+        <div *ngIf="caraEncontrada == false">
           Ninguna cara coincide con la seleccionada.
         </div>
       </div>
@@ -402,7 +405,7 @@
               <canvas [hidden]="!caraEncontrada" #canvas width="{{img.width}}" height="{{img.height}}"></canvas>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" (click)="modalVerImagen.hide(); elementoEncontrado = undefined">
+                <button type="button" class="btn btn-success" (click)="modalVerImagen.hide(); elementoEncontrado = undefined; ctx.beginPath(); jsonCoincidencia = undefined">
                     Aceptar
                 </button>
             </div>
