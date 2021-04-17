@@ -405,7 +405,7 @@
               <canvas [hidden]="!caraEncontrada" #canvas width="{{img.width}}" height="{{img.height}}"></canvas>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" (click)="modalVerImagen.hide(); elementoEncontrado = undefined; ctx.beginPath(); jsonCoincidencia = undefined">
+                <button type="button" class="btn btn-success" (click)="modalVerImagen.hide(); elementoEncontrado = undefined; ctx.beginPath();">
                     Aceptar
                 </button>
             </div>

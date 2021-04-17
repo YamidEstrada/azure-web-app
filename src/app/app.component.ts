@@ -100,11 +100,11 @@ export class AppComponent implements AfterViewInit {
                 this.jsonTextarea = JSON.stringify(elementDetect, undefined, 2);
                 this.jsonCoincidencia = JSON.stringify(responseResult, undefined, 2);
                 this.porcentaje = responseResult.confidence;
-                this.caraEncontrada = true;
                 this.img.src = this.imageSrcGrupal;
 			        	this.ctx.drawImage(this.img, 0, 0, this.img.width, this.img.height);
                 this.ctx.strokeStyle = 'blue';
                 this.ctx.strokeRect(this.elementoEncontrado['faceRectangle'].left, this.elementoEncontrado['faceRectangle'].top, this.elementoEncontrado['faceRectangle'].width, this.elementoEncontrado['faceRectangle'].height);
+                this.caraEncontrada = true;
               }
               this.botonCargando = false;
             });
